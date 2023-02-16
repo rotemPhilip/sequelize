@@ -15,7 +15,9 @@ module.exports = (sequelize) => {
     },
     {
       timestamps: false,
-      freezeTableName: true
+      // freezeTableName: true,
+      tableName: 'user_to_unit'
+
     }
   );
   return UserToUnit;

@@ -35,20 +35,38 @@ checkConnection();
 
 const UserModel = require(`../Models/User`);
 const UserToUnitModel = require(`../Models/UserToUnit`);
+const LoginModel = require(`../Models/Login`);
+const User = require("../Models/User");
 
-const Users = UserModel(sequelize,DataTypes)
-const UsersToUnits = UserToUnitModel(sequelize,DataTypes)
+const Users = UserModel(sequelize, DataTypes);
+const UsersToUnits = UserToUnitModel(sequelize, DataTypes);
+const Login = LoginModel(sequelize, DataTypes);
+
+UsersToUnits.removeAttribute("id");
+Login.removeAttribute("id");
 
 Users.hasMany(UsersToUnits, {
   foreignKey: "user_id",
-  targetKey: "user_id",
 });
 UsersToUnits.belongsTo(Users, {
   foreignKey: "user_id",
-  targetKey: "user_id",
+});
+
+Login.belongsTo(Users, {
+  foreignKey: "user_id",
+});
+
+Users.hasMany(Login, {
+  foreignKey: "user_id",
 });
 
 // console.log(User === sequelize.models.user_data); // true
+
+const addLogin = async () => {
+  await Login.create({
+    user_id: "326324043",
+  });
+};
 
 const getAllUsers = async () => {
   const users = await Users.findAll({});
@@ -103,16 +121,54 @@ const updateUser = async (id) => {
   );
 };
 
-const getUsersByUnit = async () => {
+const getUsersWithUnits = async () => {
   const users = await Users.findAll({
-    include: { model: UsersToUnits, required: true },
+    attributes: ["first_name"],
+    include: { model: UsersToUnits, attributes: ["unit_id"], required: true },
   });
-  console.log(users);
+
+  const newData = users.map((elem) =>
+    elem.user_to_units.map((ele) => ele.unit_id)
+  );
+
+  return users;
 };
-// getUserById("316578368");
-// getAllUsers();
-// addUser()
-// deleteUser("11")
-getUsersByUnit();
+
+const getUsersByUnit = async (id) => {
+  const users = await Users.findAll({
+    attributes: ["first_name", "last_name"],
+    include: {
+      model: UsersToUnits,
+      attributes: ["unit_id"],
+      where: {
+        unit_id: id,
+      },
+    },
+  });
+
+  return users;
+};
+
+const getUsersUnitAndLogin = async (id) => {
+  const users = await Login.findAll({
+    attributes: ["timestamp", "user_id"],
+
+    include: [
+      {
+        model: Users,
+        attributes: ["first_name", "last_name"],
+        required: true,
+      },
+    ],
+  });
+
+  return users;
+};
+
+app.get("/", async (req, res) => {
+  const data = await getUsersUnitAndLogin();
+
+  res.send(data);
+});
 
 module.exports = router;

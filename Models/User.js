@@ -1,5 +1,4 @@
-const { Sequelize } = require("sequelize");
-const { Model, INTEGER, DataTypes } = require("sequelize");
+const { Sequelize, DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
   const User = sequelize.define(
@@ -31,11 +30,10 @@ module.exports = (sequelize) => {
         defaultValue: false,
       },
     },
-
     {
       timestamps: false,
-      freezeTableName: true
-
+      // freezeTableName: true
+      tableName: 'user_data'
     }
   );
   return User;
